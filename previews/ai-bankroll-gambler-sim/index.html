@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Bankroll Gambler Sim</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🎰 AI Bankroll Gambler Sim</h1>
+            <p class="subtitle">Manage your bankroll. Play against AI. Master the variance.</p>
+        </header>
+
+        <div class="layout">
+            <!-- Sidebar: Game Status -->
+            <aside class="sidebar">
+                <div class="card stats-card">
+                    <h3>Your Bankroll</h3>
+                    <div class="bankroll-display">$<span id="bankroll">10000</span></div>
+                    <div class="stat-row">
+                        <label>Buy-in:</label>
+                        <input type="number" id="buyinAmount" min="10" max="5000" value="100" />
+                    </div>
+                    <div class="stat-row">
+                        <label>Stake:</label>
+                        <select id="stakeLevel">
+                            <option value="micro">Micro ($1/$2)</option>
+                            <option value="low">Low ($5/$10)</option>
+                            <option value="mid" selected>Mid ($25/$50)</option>
+                            <option value="high">High ($100/$200)</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="card stats-card">
+                    <h3>Session Stats</h3>
+                    <div class="stat-row">
+                        <label>Hands Played:</label>
+                        <span id="handsPlayed">0</span>
+                    </div>
+                    <div class="stat-row">
+                        <label>Win Rate:</label>
+                        <span id="winRate">0.00</span> BB/hr
+                    </div>
+                    <div class="stat-row">
+                        <label>Variance:</label>
+                        <span id="variance">0</span>
+                    </div>
+                    <div class="stat-row">
+                        <label>ROI:</label>
+                        <span id="roi">0%</span>
+                    </div>
+                </div>
+
+                <div class="card stats-card">
+                    <h3>Risk Assessment</h3>
+                    <div class="risk-meter">
+                        <div class="risk-bar" id="riskBar" style="width: 50%"></div>
+                    </div>
+                    <p id="riskText" class="risk-text">Moderate Risk</p>
+                    <p class="risk-tip">Keep your stake ≤ 5% of bankroll</p>
+                </div>
+
+                <button id="resetBtn" class="btn btn-secondary">Reset Game</button>
+            </aside>
+
+            <!-- Main: Game Table -->
+            <main class="game-area">
+                <div class="table-section">
+                    <h2>Poker Table</h2>
+                    
+                    <!-- Community Cards & Pot -->
+                    <div class="table-display">
+                        <div class="community-cards">
+                            <div class="label">Community Cards</div>
+                            <div id="communityCardsDisplay" class="cards-display">
+                                <div class="card-placeholder">Flop</div>
+                            </div>
+                        </div>
+                        <div class="pot-display">
+                            <div class="label">Pot</div>
+                            <div class="pot-amount">$<span id="potAmount">0</span></div>
+                        </div>
+                    </div>
+
+                    <!-- Players -->
+                    <div class="players-section">
+                        <div class="player you">
+                            <div class="player-info">
+                                <div class="player-name">You (Hero)</div>
+                                <div class="player-stack">$<span class="stack">0</span></div>
+                            </div>
+                            <div class="player-cards" id="yourCards">
+                                <div class="card">?</div>
+                                <div class="card">?</div>
+                            </div>
+                        </div>
+
+                        <div class="player ai">
+                            <div class="player-info">
+                                <div class="player-name">AI - Villain 1</div>
+                                <div class="player-stack">$<span class="stack">0</span></div>
+                            </div>
+                            <div class="player-cards" id="aiCards1">
+                                <div class="card">?</div>
+                                <div class="card">?</div>
+                            </div>
+                        </div>
+
+                        <div class="player ai">
+                            <div class="player-info">
+                                <div class="player-name">AI - Villain 2</div>
+                                <div class="player-stack">$<span class="stack">0</span></div>
+                            </div>
+                            <div class="player-cards" id="aiCards2">
+                                <div class="card">?</div>
+                                <div class="card">?</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Action Log -->
+                    <div class="action-log">
+                        <div class="log-header">Hand Action</div>
+                        <div id="actionLog" class="log-content">
+                            <p class="log-entry">Welcome to the Poker Simulator! Buy in and start playing.</p>
+                        </div>
+                    </div>
+                </div>
+            </main>
+        </div>
+
+        <!-- Game Controls -->
+        <div class="controls">
+            <div class="button-group">
+                <button id="buyinBtn" class="btn btn-primary">Buy In</button>
+                <button id="foldBtn" class="btn btn-action" disabled>Fold</button>
+                <button id="checkBtn" class="btn btn-action" disabled>Check</button>
+                <button id="callBtn" class="btn btn-action" disabled>Call $<span id="callAmount">0</span></button>
+                <button id="raiseBtn" class="btn btn-action" disabled>Raise</button>
+                <button id="allInBtn" class="btn btn-danger" disabled>All In</button>
+            </div>
+            <div id="raiseModal" class="modal hidden">
+                <div class="modal-content">
+                    <h3>Raise Amount</h3>
+                    <input type="number" id="raiseAmount" min="0" />
+                    <div class="modal-buttons">
+                        <button class="btn btn-primary" id="confirmRaise">Confirm</button>
+                        <button class="btn btn-secondary" id="cancelRaise">Cancel</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>

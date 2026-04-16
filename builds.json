@@ -1,0 +1,114 @@
+[
+  {
+    "repo_name": "ai-bankroll-gambler-sim",
+    "description": "An interactive poker bankroll management simulator with AI opponents, real variance, and strategic depth. Manage your bankroll, play hands against AI, and learn proper risk management.",
+    "repo_url": "https://github.com/Panecord/ai-bankroll-gambler-sim",
+    "full_name": "Panecord/ai-bankroll-gambler-sim",
+    "created_at": "2026-04-16T16:58:21.603495+00:00",
+    "status": "ready",
+    "files_count": 4,
+    "pushed_at": "2026-04-16T16:59:32.167492+00:00",
+    "preview_url": "/preview/ai-bankroll-gambler-sim/"
+  },
+  {
+    "repo_name": "ai-bankroll-gambler-91",
+    "description": "A web app that simulates an AI's gambling decisions with a virtual bankroll, tracking win/loss patterns and decision-making degradation as funds deplete.",
+    "repo_url": "https://github.com/Panecord/ai-bankroll-gambler-91",
+    "full_name": "Panecord/ai-bankroll-gambler-91",
+    "created_at": "2026-04-16T16:52:49.132762+00:00",
+    "status": "ready",
+    "files_count": 4,
+    "pushed_at": "2026-04-16T16:54:09.250884+00:00",
+    "preview_url": "/preview/ai-bankroll-gambler-91/"
+  },
+  {
+    "repo_name": "realtime-weather-dashboard",
+    "description": "A modern real-time weather dashboard with current conditions, 7-day forecast, and interactive hourly charts powered by Open-Meteo API.",
+    "repo_url": "https://github.com/Panecord/realtime-weather-dashboard",
+    "full_name": "Panecord/realtime-weather-dashboard",
+    "created_at": "2026-04-16T16:25:11.065424+00:00",
+    "status": "creating",
+    "files_count": 0
+  },
+  {
+    "repo_name": "ai-bankroll-gambler-3",
+    "description": "Watch an AI agent gamble through a virtual bankroll, making decisions until funds run out \u2014 real-time simulation with reasoning logs, charts, and multiple casino games.",
+    "repo_url": "https://github.com/Panecord/ai-bankroll-gambler-3",
+    "full_name": "Panecord/ai-bankroll-gambler-3",
+    "created_at": "2026-04-16T16:11:02.930670+00:00",
+    "status": "creating",
+    "files_count": 0
+  },
+  {
+    "repo_name": "ai-bankroll-roulette",
+    "description": "An AI agent that gambles with a virtual bankroll, tracking cognitive decline as funds deplete \u2014 inspired by \"Gave Claude a casino bankroll\"",
+    "repo_url": "https://github.com/Panecord/ai-bankroll-roulette",
+    "full_name": "Panecord/ai-bankroll-roulette",
+    "created_at": "2026-04-16T15:55:51.520821+00:00",
+    "status": "creating",
+    "files_count": 0
+  },
+  {
+    "repo_name": "ai-bankroll-gambler-95",
+    "description": "An AI agent gambling simulator that makes increasingly poor decisions as its bankroll depletes \u2014 with real-time logging, Chart.js bankroll tracking, and a casino-dark aesthetic.",
+    "repo_url": "https://github.com/Panecord/ai-bankroll-gambler-95",
+    "full_name": "Panecord/ai-bankroll-gambler-95",
+    "created_at": "2026-04-16T15:26:18.605377+00:00",
+    "status": "creating",
+    "files_count": 0
+  },
+  {
+    "repo_name": "ai-bankroll-gambler-32",
+    "description": "A web app simulating an AI agent gambling with a virtual bankroll, making increasingly poor decisions as funds deplete. Dark casino theme with neon accents and degrading UI quality.",
+    "repo_url": "https://github.com/Panecord/ai-bankroll-gambler-32",
+    "full_name": "Panecord/ai-bankroll-gambler-32",
+    "created_at": "2026-04-16T15:22:13.100761+00:00",
+    "status": "creating",
+    "files_count": 0
+  },
+  {
+    "repo_name": "ai-bankroll-gambler-80",
+    "description": "AI Bankroll Gambler Simulator \u2013 Watch an AI gamble with a set bankroll, making increasingly poor decisions as funds deplete, demonstrating cognitive decline under financial stress.",
+    "repo_url": "https://github.com/Panecord/ai-bankroll-gambler-80",
+    "full_name": "Panecord/ai-bankroll-gambler-80",
+    "created_at": "2026-04-16T15:16:07.641254+00:00",
+    "status": "creating",
+    "files_count": 0
+  },
+  {
+    "repo_name": "ai-bankroll-gambler-25",
+    "description": "Watch an AI agent gamble with a virtual bankroll, making increasingly questionable decisions as funds deplete and cognition degrades. Features slots, blackjack, and roulette with real-time analytics.",
+    "repo_url": "https://github.com/Panecord/ai-bankroll-gambler-25",
+    "full_name": "Panecord/ai-bankroll-gambler-25",
+    "created_at": "2026-04-16T15:06:15.274243+00:00",
+    "status": "creating",
+    "files_count": 0
+  },
+  {
+    "repo_name": "ai-bankroll-casino",
+    "description": "A meta casino web app where YOU are the AI \u2014 gamble your token budget across casino games, and as your bankroll drains, your AI \"intelligence\" degrades in hilarious ways",
+    "repo_url": "https://github.com/Panecord/ai-bankroll-casino",
+    "full_name": "Panecord/ai-bankroll-casino",
+    "created_at": "2026-04-16T14:23:38.431701+00:00",
+    "status": "creating",
+    "files_count": 0
+  },
+  {
+    "repo_name": "ai-bankroll-gambler",
+    "description": "Watch an AI gamble with a virtual bankroll, making increasingly risky decisions as funds deplete and cognitive function deteriorates. Dark noir simulator with real-time degradation effects.",
+    "repo_url": "https://github.com/Panecord/ai-bankroll-gambler",
+    "full_name": "Panecord/ai-bankroll-gambler",
+    "created_at": "2026-04-16T14:15:37.599336+00:00",
+    "status": "creating",
+    "files_count": 0
+  },
+  {
+    "repo_name": "degenai-casino",
+    "description": "Watch an AI gamble its own brain (token budget) away across Blackjack, Slots & Roulette \u2014 intelligence degrades as funds run out",
+    "repo_url": "https://github.com/Panecord/degenai-casino",
+    "full_name": "Panecord/degenai-casino",
+    "created_at": "2026-04-16T14:10:10.122212+00:00",
+    "status": "creating",
+    "files_count": 0
+  }
+]

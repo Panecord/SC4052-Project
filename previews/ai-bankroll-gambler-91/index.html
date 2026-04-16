@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AI Bankroll Gambler Simulator</title>
+  <link rel="stylesheet" href="style.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+</head>
+<body>
+  <div class="container">
+    <!-- Header -->
+    <header class="header">
+      <h1>AI Bankroll Gambler Simulator</h1>
+      <p class="subtitle">Watch the AI's decision-making degrade as funds deplete</p>
+    </header>
+
+    <!-- Control Panel -->
+    <div class="control-panel">
+      <div class="config-section">
+        <h2>Configuration</h2>
+        <div class="input-group">
+          <label for="startingBankroll">Starting Bankroll ($)</label>
+          <input type="number" id="startingBankroll" value="1000" min="100" max="10000">
+        </div>
+        <div class="input-group">
+          <label for="betStrategy">Bet Strategy</label>
+          <select id="betStrategy">
+            <option value="conservative">Conservative (5-10%)</option>
+            <option value="moderate" selected>Moderate (10-20%)</option>
+            <option value="aggressive">Aggressive (20-30%)</option>
+            <option value="reckless">Reckless (30-50%)</option>
+          </select>
+        </div>
+        <div class="input-group">
+          <label for="gameType">Game Type</label>
+          <select id="gameType">
+            <option value="blackjack" selected>Blackjack</option>
+            <option value="roulette">Roulette</option>
+            <option value="slots">Slots</option>
+            <option value="mixed">Mixed Games</option>
+          </select>
+        </div>
+        <div class="button-group">
+          <button id="startBtn" class="btn btn-primary">Start Simulation</button>
+          <button id="resetBtn" class="btn btn-secondary">Reset</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Main Dashboard -->
+    <div class="dashboard">
+      <!-- Left Column: Real-time Stats -->
+      <div class="stats-panel">
+        <div class="stat-card">
+          <div class="stat-label">Current Bankroll</div>
+          <div class="stat-value" id="bankrollDisplay">$1,000</div>
+          <div class="stat-subtext" id="bankrollChange"></div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Hands Played</div>
+          <div class="stat-value" id="handsDisplay">0</div>
+          <div class="stat-subtext">Total rounds</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Win Rate</div>
+          <div class="stat-value" id="winRateDisplay">--</div>
+          <div class="stat-subtext" id="winLossRatio"></div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Avg Bet Size</div>
+          <div class="stat-value" id="avgBetDisplay">$0</div>
+          <div class="stat-subtext" id="betDeviation"></div>
+        </div>
+      </div>
+
+      <!-- Center Column: Cognitive Performance & Game Display -->
+      <div class="main-panel">
+        <!-- Cognitive Degradation Meter -->
+        <div class="cognitive-panel">
+          <h3>AI Cognitive Performance</h3>
+          <div class="cognitive-meter">
+            <div class="meter-bar">
+              <div class="meter-fill" id="cognitiveMeter" style="width: 100%"></div>
+            </div>
+            <div class="meter-labels">
+              <span>100%</span>
+              <span id="cognitivePercent">100%</span>
+              <span>0%</span>
+            </div>
+          </div>
+          <p class="cognitive-status" id="cognitiveStatus">AI is sharp and rational</p>
+        </div>
+
+        <!-- Current Game Display -->
+        <div class="game-display">
+          <h3>Current Game</h3>
+          <div class="game-area" id="gameArea">
+            <div class="game-placeholder">Ready to start...</div>
+          </div>
+        </div>
+
+        <!-- Decision Log -->
+        <div class="decision-log">
+          <h3>Recent Decisions</h3>
+          <div class="log-content" id="decisionLog">
+            <p class="log-empty">Decisions will appear here</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Right Column: Charts -->
+      <div class="charts-panel">
+        <div class="chart-container">
+          <h3>Bankroll History</h3>
+          <canvas id="bankrollChart"></canvas>
+        </div>
+        <div class="chart-container">
+          <h3>Win/Loss Distribution</h3>
+          <canvas id="winLossChart"></canvas>
+        </div>
+        <div class="chart-container">
+          <h3>Bet Size Progression</h3>
+          <canvas id="betChart"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <!-- Simulation Status Bar -->
+    <div class="status-bar">
+      <div class="status-text" id="statusText">Ready to simulate</div>
+      <div class="status-indicator" id="statusIndicator"></div>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>

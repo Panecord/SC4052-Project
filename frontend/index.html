@@ -1,0 +1,649 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CloneMe — Your Digital Clone</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github.min.css" />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+<!-- ── App Shell ─────────────────────────────────────────────────────────── -->
+<div class="shell">
+
+  <!-- ── Left Nav ──────────────────────────────────────────────────────── -->
+  <nav class="nav" id="nav">
+    <div class="nav-brand">
+      <div class="brand-avatar">C</div>
+      <div class="brand-text">
+        <span class="brand-name">CloneMe</span>
+        <span class="brand-sub">Your Digital Clone</span>
+      </div>
+    </div>
+
+    <div class="nav-items">
+      <button class="nav-item active" data-section="trends" onclick="switchSection('trends')">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
+        </svg>
+        <span>Trends</span>
+      </button>
+      <button class="nav-item" data-section="chat" onclick="switchSection('chat')">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+        </svg>
+        <span>Chat</span>
+      </button>
+      <button class="nav-item" data-section="calendar" onclick="switchSection('calendar')">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+          <line x1="16" y1="2" x2="16" y2="6"/>
+          <line x1="8"  y1="2" x2="8"  y2="6"/>
+          <line x1="3"  y1="10" x2="21" y2="10"/>
+        </svg>
+        <span>Calendar</span>
+      </button>
+      <button class="nav-item" data-section="email" onclick="switchSection('email')">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
+          <polyline points="22,6 12,13 2,6"/>
+        </svg>
+        <span>Email</span>
+        <span class="nav-badge" id="email-badge" style="display:none">0</span>
+      </button>
+    </div>
+
+    <div class="nav-footer">
+      <div class="health-row" id="health-row" title="Service status"></div>
+      <div class="nav-google-status" id="nav-google-status"></div>
+    </div>
+  </nav>
+
+  <!-- ── Main Content ───────────────────────────────────────────────────── -->
+  <main class="main" id="main">
+
+    <!-- ════════════════════════════════════════════════════════════════════
+         CHAT SECTION
+    ═════════════════════════════════════════════════════════════════════ -->
+    <section class="section" id="section-chat">
+      <div class="chat-wrap">
+        <!-- Tab bar + panel toggle -->
+        <div class="chat-tab-area">
+          <div class="chat-tabs" id="chat-tabs"></div>
+          <button class="results-toggle-btn" id="results-toggle-btn" onclick="toggleResultsPanel()" title="Show outputs panel">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <rect x="3" y="3" width="18" height="18" rx="2"/><line x1="15" y1="3" x2="15" y2="21"/>
+            </svg>
+          </button>
+        </div>
+
+        <!-- Build pipeline bar — shown only during build flow -->
+        <div class="pipeline-bar" id="pipeline-bar" style="display:none">
+          <div class="pipe-step pending" id="pipe-step-0">
+            <div class="pipe-dot"></div>
+            <span>Discover</span>
+          </div>
+          <div class="pipe-line"></div>
+          <div class="pipe-step pending" id="pipe-step-1">
+            <div class="pipe-dot"></div>
+            <span>Research</span>
+          </div>
+          <div class="pipe-line"></div>
+          <div class="pipe-step pending" id="pipe-step-2">
+            <div class="pipe-dot"></div>
+            <span>Build</span>
+          </div>
+          <div class="pipe-line"></div>
+          <div class="pipe-step pending" id="pipe-step-3">
+            <div class="pipe-dot"></div>
+            <span>Schedule</span>
+          </div>
+        </div>
+
+        <!-- Feed -->
+        <div class="chat-feed" id="chat-feed">
+          <!-- Welcome state — adopted by first tab -->
+          <div class="chat-welcome" id="chat-welcome">
+            <div class="welcome-avatar">C</div>
+            <h2>Hi, I'm CloneMe</h2>
+            <p>Your digital clone — running tasks so you don't have to.</p>
+
+            <div class="welcome-modes">
+              <!-- Left: Do things for me -->
+              <div class="welcome-mode">
+                <div class="welcome-mode-label">
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+                  Do things for me
+                </div>
+                <button class="qa-btn" onclick="quickAction('Check my unread emails and summarise the important ones')">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+                  Check inbox
+                </button>
+                <button class="qa-btn" onclick="quickAction('What is on my calendar for the next 7 days?')">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                  Today's schedule
+                </button>
+                <button class="qa-btn" onclick="quickAction('What is trending on Mastodon and HackerNews right now? Give me a brief analysis.')">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+                  Trending now
+                </button>
+              </div>
+
+              <div class="welcome-mode-divider"></div>
+
+              <!-- Right: Build something -->
+              <div class="welcome-mode">
+                <div class="welcome-mode-label">
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+                  Build an app
+                </div>
+                <button class="qa-btn" onclick="quickBuild('Build a real-time weather dashboard using the Open-Meteo API. Show current conditions, 7-day forecast, and hourly chart.')">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9z"/></svg>
+                  Weather dashboard
+                </button>
+                <button class="qa-btn" onclick="quickBuild('Build a GitHub profile analyser. Enter any username to see contribution heatmap, top languages, and repo stats.')">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"/></svg>
+                  GitHub analyser
+                </button>
+                <button class="qa-btn qa-btn-ideas" onclick="toggleIdeas()">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                  Browse ideas…
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Input area -->
+        <div class="chat-input-wrap">
+          <!-- Quick strip — shown after first message, horizontal scrollable -->
+          <div class="quick-strip" id="quick-strip" style="display:none">
+            <div class="quick-strip-scroll">
+              <button class="qs-chip qs-chip-task" onclick="quickAction('Check my unread emails and summarise the important ones')">✉ Check inbox</button>
+              <button class="qs-chip qs-chip-task" onclick="quickAction('What is on my calendar for the next 7 days?')">📅 Today's schedule</button>
+              <button class="qs-chip qs-chip-task" onclick="quickAction('What is trending on Mastodon and HackerNews right now?')">📈 Trending now</button>
+              <div class="qs-divider"></div>
+              <button class="qs-chip qs-chip-build" onclick="quickBuild('Build a real-time weather dashboard using the Open-Meteo API.')">⚡ Weather dashboard</button>
+              <button class="qs-chip qs-chip-build" onclick="quickBuild('Build a GitHub profile analyser.')">⚡ GitHub analyser</button>
+              <button class="qs-chip qs-chip-browse" onclick="toggleIdeas()">✦ Browse ideas</button>
+            </div>
+          </div>
+
+          <!-- Ideas panel (collapsible) -->
+          <div class="ideas-panel" id="ideas-panel" style="display:none">
+            <div class="ideas-header">
+              <div class="ideas-sources">
+                <button class="src-tab active" data-source="curated"   onclick="switchSource(this)">Curated</button>
+                <button class="src-tab" data-source="hackernews"       onclick="switchSource(this)">HN</button>
+                <button class="src-tab" data-source="github"           onclick="switchSource(this)">GitHub</button>
+                <button class="src-tab" data-source="mastodon"         onclick="switchSource(this)">Mastodon</button>
+                <button class="src-tab" data-source="youtube"          onclick="switchSource(this)">YouTube</button>
+                <button class="src-tab" data-source="reddit"           onclick="switchSource(this)">Reddit</button>
+              </div>
+              <button class="ideas-close" onclick="toggleIdeas()">✕</button>
+            </div>
+            <div id="ideas-list" class="ideas-list">
+              <div class="loading-state"><div class="spin"></div><span>Loading ideas…</span></div>
+            </div>
+          </div>
+
+          <div class="chat-input-box">
+            <textarea
+              id="prompt-input"
+              class="chat-textarea"
+              placeholder="Ask CloneMe anything — check email, build an app, analyse trends…"
+              rows="1"
+              onkeydown="handleKey(event)"
+              oninput="autoResize(this)"
+            ></textarea>
+            <div class="chat-input-row">
+              <button class="input-action-btn" onclick="toggleIdeas()" title="Browse app ideas">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+              </button>
+              <select id="model-select" class="model-select">
+                <option value="claude-haiku-4-5-20251001" selected>Haiku 4.5 — fast</option>
+                <option value="claude-sonnet-4-6">Sonnet 4.6</option>
+                <option value="claude-opus-4-6">Opus 4.6 — powerful</option>
+              </select>
+              <span class="input-hint"><kbd>Ctrl+Enter</kbd></span>
+              <button id="send-btn" class="send-btn" onclick="sendPrompt()" title="Send">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                  <line x1="22" y1="2" x2="11" y2="13"/>
+                  <polygon points="22 2 15 22 11 13 2 9 22 2"/>
+                </svg>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Right: Results panel (hidden until needed) -->
+      <aside class="results-panel" id="results-panel" style="display:none">
+        <div class="results-header">
+          <h3>Output</h3>
+          <button class="icon-btn" onclick="clearResults()" title="Clear">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/>
+              <path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/>
+            </svg>
+          </button>
+        </div>
+        <div id="results-content" class="results-content">
+          <div class="results-empty">
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" opacity="0.2">
+              <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+            </svg>
+            <p>Built apps and outputs appear here.</p>
+          </div>
+        </div>
+      </aside>
+    </section>
+
+    <!-- ════════════════════════════════════════════════════════════════════
+         EMAIL SECTION
+    ═════════════════════════════════════════════════════════════════════ -->
+    <section class="section" id="section-email">
+      <div class="section-inner">
+        <div class="section-head">
+          <div>
+            <h2 class="section-title">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+              Inbox
+            </h2>
+            <p class="section-sub" id="email-account-label">Connect your accounts to read emails</p>
+          </div>
+          <div class="section-actions">
+            <div id="gmail-connect-area">
+              <a href="/api/google/auth" class="connect-btn">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/></svg>
+                Connect Google
+              </a>
+            </div>
+            <button class="icon-btn" id="email-refresh-btn" onclick="loadEmails()" title="Refresh">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M23 4v6h-6"/><path d="M1 20v-6h6"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
+            </button>
+          </div>
+        </div>
+
+        <!-- Provider tabs -->
+        <div class="email-provider-tabs" id="email-provider-tabs">
+          <button class="email-provider-tab active" data-provider="gmail" onclick="switchEmailProvider(this)">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/></svg>
+            Gmail
+          </button>
+          <button class="email-provider-tab" data-provider="outlook" onclick="switchEmailProvider(this)">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="#0078d4"><rect x="1" y="4" width="14" height="16" rx="1"/><path d="M15 8l8-4v16l-8-4V8z" fill="#0078d4"/></svg>
+            Outlook
+            <span class="prov-connect-hint" id="outlook-connect-hint">+ Connect</span>
+          </button>
+          <button class="email-provider-tab" data-provider="yahoo" onclick="switchEmailProvider(this)">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="#6001d2"><path d="M12 2L8 10l-6 2 5 5-1 7 6-3 6 3-1-7 5-5-6-2z"/></svg>
+            Yahoo
+            <span class="prov-connect-hint" id="yahoo-connect-hint">+ Connect</span>
+          </button>
+        </div>
+
+        <div class="email-toolbar">
+          <div class="search-box">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            <input type="text" id="email-search" placeholder="Search emails…" onkeydown="if(event.key==='Enter') loadEmails()" />
+          </div>
+          <button class="filter-btn active" onclick="setEmailFilter(this,'')">All</button>
+          <button class="filter-btn" onclick="setEmailFilter(this,'is:unread')">Unread</button>
+          <button class="filter-btn" onclick="setEmailFilter(this,'is:starred')">Starred</button>
+        </div>
+
+        <div id="email-list" class="email-list">
+          <div class="connect-prompt" id="email-connect-prompt">
+            <div class="connect-prompt-icon">✉</div>
+            <h3>Connect Gmail</h3>
+            <p>Click "Connect Google" above to read and analyse your emails with AI.</p>
+          </div>
+        </div>
+
+        <!-- Load more -->
+        <div class="email-load-more-row" id="email-load-more-row" style="display:none">
+          <button class="email-load-more-btn" onclick="loadMoreEmails()">Load more</button>
+        </div>
+      </div>
+
+      <!-- Email reading pane -->
+      <div class="email-reader" id="email-reader" style="display:none">
+        <div class="reader-header">
+          <button class="icon-btn" onclick="closeEmailReader()" title="Back">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg>
+          </button>
+          <h3 id="reader-subject" class="reader-subject">Subject</h3>
+        </div>
+        <div class="reader-meta" id="reader-meta"></div>
+        <div class="reader-body" id="reader-body"></div>
+        <div class="reader-actions">
+          <button class="action-btn accent" onclick="summariseEmail()">✨ Summarise with AI</button>
+          <button class="action-btn" onclick="draftReply()">↩ Draft Reply</button>
+        </div>
+        <div id="reader-ai-output" class="reader-ai-output" style="display:none"></div>
+      </div>
+    </section>
+
+    <!-- ── IMAP Connect Modal ──────────────────────────────────────────── -->
+    <div id="imap-modal" class="modal-overlay" onclick="if(event.target===this) closeImapModal()">
+      <div class="modal">
+        <div class="modal-header">
+          <h3 id="imap-modal-title">Connect Outlook</h3>
+          <button class="icon-btn" onclick="closeImapModal()">✕</button>
+        </div>
+        <div class="modal-body" style="padding:20px;display:flex;flex-direction:column;gap:12px">
+          <div style="font-size:12px;color:var(--text-3);line-height:1.7" id="imap-modal-hint">
+            Use your email address and an App Password (not your main password).
+          </div>
+          <input type="email"    id="imap-email"    class="form-input" placeholder="your@email.com" />
+          <input type="password" id="imap-password" class="form-input" placeholder="App password" />
+          <div id="imap-error"   style="color:var(--red);font-size:12px;display:none"></div>
+          <div class="form-actions">
+            <button class="action-btn accent" id="imap-save-btn" onclick="saveImapAccount()">Connect</button>
+            <button class="action-btn" onclick="closeImapModal()">Cancel</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ════════════════════════════════════════════════════════════════════
+         CALENDAR SECTION
+    ═════════════════════════════════════════════════════════════════════ -->
+    <section class="section" id="section-calendar">
+      <div class="section-inner wide">
+        <div class="section-head">
+          <div>
+            <h2 class="section-title">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+              Calendar
+            </h2>
+            <p class="section-sub" id="cal-account-label">Upcoming events from Google Calendar</p>
+          </div>
+          <div class="section-actions">
+            <div id="cal-connect-area">
+              <a href="/api/google/auth" class="connect-btn">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/></svg>
+                Connect Google
+              </a>
+            </div>
+            <button class="icon-btn" onclick="loadCalendar()" title="Refresh">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M23 4v6h-6"/><path d="M1 20v-6h6"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
+            </button>
+          </div>
+        </div>
+
+        <!-- Week navigation bar -->
+        <div class="cal-week-nav">
+          <button class="icon-btn" onclick="calPrevWeek()" title="Previous week">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg>
+          </button>
+          <button class="cal-today-btn" onclick="calToday()">Today</button>
+          <span id="cal-week-label" class="cal-week-label"></span>
+          <button class="icon-btn" onclick="calNextWeek()" title="Next week">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
+          </button>
+          <button class="action-btn secondary" onclick="toggleNewEventForm()" style="margin-left:auto;font-size:12px;padding:6px 14px">+ New Event</button>
+        </div>
+
+        <!-- Not-connected notice (hidden when connected) -->
+        <div id="cal-connect-msg" class="connect-prompt" style="display:none">
+          <div class="connect-prompt-icon">📅</div>
+          <h3>Connect Google Calendar</h3>
+          <p>Click "Connect Google" above to view your schedule.</p>
+        </div>
+
+        <!-- Week grid (populated by calendar.js) -->
+        <div id="cal-week-wrap" class="cal-week-wrap"></div>
+
+        <!-- Create event form -->
+        <div class="create-event-form" id="create-event-form" style="display:none">
+          <h4>New Event</h4>
+          <input type="text"          id="ev-title" class="form-input" placeholder="Event title" />
+          <input type="datetime-local" id="ev-start" class="form-input" />
+          <input type="datetime-local" id="ev-end"   class="form-input" />
+          <input type="text"          id="ev-desc"  class="form-input" placeholder="Description (optional)" />
+          <div class="form-actions">
+            <button class="action-btn accent cal-create-submit-btn" onclick="createEvent()">Create Event</button>
+            <button class="action-btn" onclick="toggleNewEventForm()">Cancel</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ════════════════════════════════════════════════════════════════════
+         TRENDS SECTION
+    ═════════════════════════════════════════════════════════════════════ -->
+    <section class="section active" id="section-trends">
+      <div class="section-inner wide">
+        <div class="section-head">
+          <div>
+            <h2 class="section-title">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+              Trending Now
+            </h2>
+            <p class="section-sub">What's hot across social media and tech platforms</p>
+          </div>
+          <div class="section-actions">
+            <button class="action-btn accent" onclick="analyseAllTrends()">✨ Analyse with AI</button>
+            <button class="icon-btn" onclick="loadTrends(currentTrendSource)" title="Refresh">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M23 4v6h-6"/><path d="M1 20v-6h6"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
+            </button>
+          </div>
+        </div>
+
+        <div class="trends-sources">
+          <button class="source-tab active" data-src="mastodon"   onclick="switchTrendSource(this)">
+            <span class="src-dot mastodon"></span> Mastodon
+          </button>
+          <button class="source-tab" data-src="hackernews" onclick="switchTrendSource(this)">
+            <span class="src-dot hn"></span> HackerNews
+          </button>
+          <button class="source-tab" data-src="github" onclick="switchTrendSource(this)">
+            <span class="src-dot github"></span> GitHub
+          </button>
+          <button class="source-tab" data-src="youtube" onclick="switchTrendSource(this)">
+            <span class="src-dot youtube"></span> YouTube
+          </button>
+          <button class="source-tab" data-src="reddit" onclick="switchTrendSource(this)">
+            <span class="src-dot reddit"></span> Reddit
+          </button>
+        </div>
+
+        <!-- Search bar -->
+        <div class="trend-search-bar" id="trend-search-bar">
+          <div class="trend-search-input-wrap">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="trend-search-icon">
+              <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+            </svg>
+            <input id="trend-search-input" type="text" placeholder="Search trends…" class="trend-search-input"
+              oninput="onTrendSearchInput(this.value)"
+              onfocus="onTrendSearchFocus()"
+              onblur="onTrendSearchBlur()"
+              onkeydown="onTrendSearchKey(event)">
+            <button class="trend-search-clear" id="trend-search-clear" onclick="clearTrendSearch()" style="display:none" title="Clear search">✕</button>
+          </div>
+          <div class="trend-search-dropdown" id="trend-search-dropdown" style="display:none"></div>
+        </div>
+
+        <div id="trends-grid" class="trends-grid">
+          <div class="loading-state"><div class="spin"></div><span>Loading trends…</span></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ════════════════════════════════════════════════════════════════════
+         TASKS SECTION
+    ═════════════════════════════════════════════════════════════════════ -->
+    <section class="section" id="section-tasks">
+      <div class="section-inner">
+        <div class="section-head">
+          <div>
+            <h2 class="section-title">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M4.93 4.93a10 10 0 0 0 0 14.14"/></svg>
+              Background Tasks
+            </h2>
+            <p class="section-sub">Everything your digital clone has been doing for you</p>
+          </div>
+          <div class="section-actions">
+            <button class="icon-btn" onclick="loadTasks()" title="Refresh">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M23 4v6h-6"/><path d="M1 20v-6h6"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
+            </button>
+          </div>
+        </div>
+
+        <div id="tasks-list" class="tasks-list">
+          <div class="connect-prompt">
+            <div class="connect-prompt-icon">⚙</div>
+            <h3>No tasks yet</h3>
+            <p>When CloneMe runs tasks for you — building apps, reading email, analysing trends — they appear here.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ════════════════════════════════════════════════════════════════════
+         FLOATING TASKS WIDGET — visible from every section
+    ═════════════════════════════════════════════════════════════════════ -->
+    <div class="tasks-float" id="tasks-float">
+      <div class="tasks-float-panel" id="tasks-float-panel">
+        <div class="tasks-float-header">
+          <span>Background Tasks</span>
+          <button class="icon-btn" onclick="toggleTasksFloat()">✕</button>
+        </div>
+        <div class="tasks-float-body" id="tasks-float-body">
+          <div class="tasks-float-empty">No tasks yet — try asking CloneMe to do something!</div>
+        </div>
+      </div>
+      <button class="tasks-float-btn" id="tasks-float-btn" onclick="toggleTasksFloat()" title="Background tasks">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="12" r="3"/>
+          <path d="M19.07 4.93a10 10 0 0 1 0 14.14M4.93 4.93a10 10 0 0 0 0 14.14"/>
+        </svg>
+        <span id="tasks-float-label">No tasks yet</span>
+        <span class="tasks-float-badge" id="tasks-float-badge" style="display:none">0</span>
+      </button>
+    </div>
+
+  </main><!-- /main -->
+</div><!-- /shell -->
+
+<!-- ── Calendar event detail modal ───────────────────────────────────────── -->
+<div id="cal-event-modal" class="modal-overlay" onclick="if(event.target===this) closeCalEvent()">
+  <div class="modal" style="max-width:420px">
+    <div class="modal-header">
+      <h3 id="cem-title" style="font-size:15px;font-weight:600;flex:1;min-width:0;word-break:break-word"></h3>
+      <button class="icon-btn" onclick="closeCalEvent()">✕</button>
+    </div>
+    <div class="modal-body" style="padding:16px 20px;gap:10px">
+      <div style="display:flex;align-items:flex-start;gap:10px">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0;margin-top:2px;color:var(--cyan)"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+        <span id="cem-time" style="font-size:13px;color:var(--text-2);line-height:1.5"></span>
+      </div>
+      <div id="cem-location" style="align-items:flex-start;gap:10px;display:none">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0;margin-top:2px;color:var(--text-3)"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+        <span style="font-size:13px;color:var(--text-2)"></span>
+      </div>
+      <div id="cem-desc" style="font-size:12px;color:var(--text-3);line-height:1.7;white-space:pre-wrap;display:none"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ── Trend detail modal ─────────────────────────────────────────────────── -->
+<div id="trend-detail-modal" class="modal-overlay" onclick="if(event.target===this) closeTrendDetail()">
+  <div class="modal tdm-modal">
+    <div class="modal-header">
+      <span id="tdm-source" class="tdm-source-badge"></span>
+      <button class="icon-btn" onclick="closeTrendDetail()">✕</button>
+    </div>
+    <div class="tdm-scroll">
+      <!-- Basic info -->
+      <div style="padding:0 20px 16px;display:flex;flex-direction:column;gap:10px">
+        <h3 id="tdm-title" style="font-size:16px;font-weight:700;color:var(--text);line-height:1.4"></h3>
+        <p  id="tdm-desc"  style="font-size:13px;color:var(--text-2);line-height:1.75"></p>
+        <div id="tdm-tags" class="trend-tags" style="flex-wrap:wrap"></div>
+        <a id="tdm-link" href="#" target="_blank" rel="noopener noreferrer"
+           style="font-size:12px;color:var(--cyan);text-decoration:none;font-weight:500"></a>
+      </div>
+
+      <!-- Rich detail (loaded async) -->
+      <div id="tdm-detail" class="tdm-detail-section"></div>
+    </div>
+
+    <!-- Sticky action bar -->
+    <div class="tdm-actions">
+      <button id="tdm-analyse-btn" class="action-btn secondary" style="flex:1">✨ Analyse with AI</button>
+      <button id="tdm-build-btn"   class="action-btn accent"    style="flex:1">⚡ Build an app</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── Build History modal ────────────────────────────────────────────────── -->
+<div id="apps-modal" class="modal-overlay" onclick="if(event.target===this) closeAppsModal()">
+  <div class="modal builds-modal">
+    <div class="modal-header">
+      <h3>Build History</h3>
+      <button class="icon-btn" onclick="closeAppsModal()">✕</button>
+    </div>
+    <div id="apps-modal-body" class="modal-body">
+      <div class="loading-state"><div class="spin"></div><span>Loading…</span></div>
+    </div>
+  </div>
+</div>
+
+<!-- ── Milestone / Project Schedule modal ────────────────────────────────── -->
+<div id="milestone-modal" class="modal-overlay" onclick="if(event.target===this) closeMilestoneModal()">
+  <div class="modal milestone-modal">
+    <div class="modal-header">
+      <div style="display:flex;flex-direction:column;gap:2px">
+        <h3>📅 Project Schedule</h3>
+        <span id="ms-repo-label" style="font-size:11px;color:var(--text-3);font-family:var(--mono)"></span>
+      </div>
+      <button class="icon-btn" onclick="closeMilestoneModal()">✕</button>
+    </div>
+    <div class="modal-body" style="padding:18px 20px;gap:16px;overflow-y:auto;max-height:65vh">
+      <p class="ms-intro">Your app is built. Add milestones to your Google Calendar so you can track development like a real project.</p>
+
+      <!-- Deadline row -->
+      <div class="ms-section">
+        <div class="ms-section-label">Project deadline</div>
+        <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+          <input type="date" id="ms-deadline" class="form-input" style="width:160px" />
+          <label style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--text-3);cursor:pointer">
+            <input type="checkbox" id="ms-no-deadline" onchange="toggleMsDeadline(this)" style="cursor:pointer" />
+            No deadline
+          </label>
+        </div>
+      </div>
+
+      <!-- Feature milestones -->
+      <div class="ms-section">
+        <div class="ms-section-label" style="margin-bottom:8px">Feature milestones
+          <button class="ms-add-btn" onclick="addMilestoneFeature()">+ Add</button>
+        </div>
+        <div id="ms-features"></div>
+      </div>
+    </div>
+    <div style="padding:12px 20px;border-top:1px solid var(--border);display:flex;gap:8px;flex-shrink:0">
+      <button class="action-btn accent" id="ms-save-btn" onclick="saveMilestones()">Add to Calendar</button>
+      <button class="action-btn" onclick="closeMilestoneModal()">Skip for now</button>
+    </div>
+  </div>
+</div>
+
+<script src="state.js"></script>
+<script src="utils.js"></script>
+<script src="chat.js"></script>
+<script src="email.js"></script>
+<script src="calendar.js"></script>
+<script src="trends.js"></script>
+<script src="tasks.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
