@@ -417,7 +417,7 @@ for i, h in enumerate(headers):
     cell.paragraphs[0].runs[0].font.size = Pt(10)
 
 rows_data = [
-    ["AI Agent Engine",       "Python + Anthropic SDK",      "Claude API (claude-sonnet-4-6)",        "Reasoning, tool orchestration, SSE streaming"],
+    ["AI Agent Engine",       "Python + Anthropic SDK",      "Claude API (haiku/sonnet/opus)",        "Reasoning, tool orchestration, SSE streaming, continuation"],
     ["Email Service",         "Python + imaplib + Gmail API","Gmail API v1 / IMAP (Outlook, Yahoo)",  "Read, search, summarise emails"],
     ["Calendar Service",      "Python + Google API Client",  "Google Calendar API v3",                "Fetch events, create appointments"],
     ["Trends Service",        "Python + requests",           "Mastodon, HN, GitHub, Reddit, YouTube", "Aggregate real-time trend data"],
@@ -439,7 +439,7 @@ doc.add_paragraph()
 
 add_heading("4.2 Backend Microservices (Flask)", level=2)
 add_para(
-    "The backend is a single Flask application (app.py, approximately 1,700 lines) that exposes "
+    "The backend is a single Flask application (app.py, approximately 2,500 lines) that exposes "
     "RESTful API endpoints for each service domain. Despite being a monolith at the process level, "
     "the code is architecturally decomposed into service modules, each with its own route namespace, "
     "helper functions, and external API interactions. This design choice trades the operational "
@@ -448,7 +448,8 @@ add_para(
     "separation."
 )
 add_para("Key API endpoint namespaces:")
-add_bullet("/api/chat             — POST, streams AI agent response via SSE")
+add_bullet("/api/chat             — POST, streams AI agent response via SSE (accepts conversation history)")
+add_bullet("/api/chat/continue    — POST, resumes a truncated (max_tokens) agent session")
 add_bullet("/api/clarify          — POST, intent classification before routing")
 add_bullet("/api/gmail/*          — Gmail inbox, message fetch, pagination")
 add_bullet("/api/email/*          — IMAP provider management (connect, inbox, message)")
@@ -467,8 +468,9 @@ add_para(
 
 add_heading("4.3 AI Agent Engine", level=2)
 add_para(
-    "The AI agent is built on Anthropic's claude-sonnet-4-6 model using the tool-use (function "
-    "calling) capability. The agent implements a standard ReAct loop:"
+    "The AI agent is built on Anthropic's Claude models using the tool-use (function calling) "
+    "capability, with claude-haiku-4-5-20251001 as the default for speed and cost efficiency. "
+    "The agent implements a standard ReAct loop:"
 )
 add_bullet("The user sends a natural-language prompt via POST /api/chat")
 add_bullet("The server calls the Anthropic messages.stream() API with a system prompt, conversation history, and tool definitions")
@@ -477,22 +479,42 @@ add_bullet("When a tool_call is received, the server executes the corresponding 
 add_bullet("The loop continues until the model emits a stop_reason of 'end_turn' with no pending tool calls")
 
 add_para("The SSE event stream uses the following event types:")
-add_code_block("data: {\"type\": \"status\",      \"message\": \"My clone is working…\"}")
-add_code_block("data: {\"type\": \"text\",         \"content\": \"Based on your inbox…\"}")
-add_code_block("data: {\"type\": \"tool_call\",    \"id\": \"tc_001\", \"name\": \"get_email_inbox\", \"input\": {...}}")
-add_code_block("data: {\"type\": \"tool_result\",  \"id\": \"tc_001\", \"name\": \"get_email_inbox\", \"result\": {...}}")
+add_code_block("data: {\"type\": \"status\",          \"message\": \"My clone is working…\"}")
+add_code_block("data: {\"type\": \"tool_generating\",  \"name\": \"push_files_to_repo\"}")
+add_code_block("data: {\"type\": \"text\",             \"content\": \"Based on your inbox…\"}")
+add_code_block("data: {\"type\": \"tool_call\",        \"id\": \"tc_001\", \"name\": \"get_email_inbox\", \"input\": {...}}")
+add_code_block("data: {\"type\": \"tool_result\",      \"id\": \"tc_001\", \"name\": \"get_email_inbox\", \"result\": {...}}")
+add_code_block("data: {\"type\": \"truncated\",        \"session_id\": \"abc123\"}")
 add_code_block("data: {\"type\": \"done\"}")
 
 add_para(
     "The frontend distinguishes between 'info tools' (email, calendar, trends) that display an "
     "animated spinner status message, and 'build tools' (create_github_repo, push_files_to_repo) "
-    "that display expandable tool cards showing inputs and outputs. This design provides appropriate "
-    "visual feedback without exposing low-level JSON to the user for routine read operations."
+    "that display expandable tool cards showing inputs and outputs. A tool_generating event is emitted "
+    "as soon as the model begins generating a tool's input JSON, giving the user live feedback during "
+    "long code-generation phases (e.g. 'Writing push_files_to_repo…'). This design eliminates the "
+    "blank-screen experience that would otherwise occur during multi-second tool-input generation."
 )
 add_para(
-    "Three Claude model tiers are offered: claude-haiku-4-5-20251001 (fastest, cheapest), "
-    "claude-sonnet-4-6 (default, balanced), and claude-opus-4-6 (most capable). The user selects "
-    "the model per-session from a dropdown in the chat interface."
+    "Three Claude model tiers are offered: claude-haiku-4-5-20251001 (default, fastest and most "
+    "cost-efficient), claude-sonnet-4-6 (balanced), and claude-opus-4-6 (most capable). The user "
+    "selects the model per-session from a dropdown in the chat interface."
+)
+add_para(
+    "When the model's output reaches the token limit (stop_reason='max_tokens'), the agent saves "
+    "the full conversation state to a server-side session store and emits a truncated SSE event "
+    "containing a session_id. The frontend renders a 'Response cut off — Continue →' notice. "
+    "Clicking it calls POST /api/chat/continue with the session_id; the server retrieves the saved "
+    "messages, appends a continuation prompt, and resumes the agent loop — replicating the behaviour "
+    "of Claude.ai's own continuation flow. Sessions expire after 30 minutes."
+)
+add_para(
+    "Each chat tab maintains a per-session conversation history (text messages only, capped at 20 "
+    "entries). Every new request includes this history in the POST /api/chat body, allowing follow-up "
+    "messages such as 'make it better' or 'add dark mode' to operate in full context of the previous "
+    "exchanges. The existing repo name and URL are also injected into the prompt when a follow-up is "
+    "sent on a tab that already has a built repository, ensuring the agent pushes changes to the "
+    "correct repo rather than creating a new one."
 )
 
 add_heading("4.4 Email Service", level=2)
@@ -862,7 +884,9 @@ for i, h in enumerate(["Feature", "Status", "Notes"]):
     t2.rows[0].cells[i].paragraphs[0].runs[0].font.size = Pt(10)
 
 features = [
-    ["Natural language chat interface",          "✓ Implemented", "Multi-tab, SSE streaming"],
+    ["Natural language chat interface",          "✓ Implemented", "Multi-tab, SSE streaming, per-tab history"],
+    ["Real-time tool generation feedback",       "✓ Implemented", "tool_generating SSE — shows which tool is being written"],
+    ["Max-tokens continuation",                  "✓ Implemented", "Saves session state, Continue → button resumes seamlessly"],
     ["Gmail integration (OAuth2)",               "✓ Implemented", "Read, search, summarise, paginate"],
     ["Outlook IMAP integration",                 "✓ Implemented", "Personal accounts; Exchange blocked"],
     ["Yahoo Mail IMAP integration",              "✓ Implemented", "App Password required"],
@@ -908,8 +932,8 @@ add_para(
 
 add_heading("6.3 Limitations", level=2)
 add_bullet("Single-user: no multi-tenancy, no user accounts, no database — by design for this scope")
-add_bullet("Exchange Online: Microsoft's deprecated Basic Auth for Exchange Online prevents @e.ntu.edu.sg IMAP access; OAuth2 Modern Auth is the correct fix but was not implemented in this project")
-add_bullet("No persistent conversation history: each chat session starts fresh; long-term user preference modelling (as described for OpenClaw) is future work")
+add_bullet("Exchange Online: Microsoft has deprecated Basic Auth for Exchange Online, preventing @e.ntu.edu.sg IMAP access; OAuth2 Modern Auth is the correct fix but was not implemented in this project")
+add_bullet("In-session history only: conversation history persists within a browser tab for the duration of the session but is not stored to disk; closing the tab loses context. Long-term user preference modelling remains future work")
 add_bullet("Gmail write: the current Gmail scope is read-only; sending emails requires additional OAuth scopes")
 add_bullet("Local preview only: AI-generated apps are served from localhost; cloud deployment (e.g., Vercel, GitHub Pages) would require additional infrastructure")
 add_bullet("Rate limits: YouTube Data API has a 10,000 unit/day quota; heavy trend usage could exhaust it")
@@ -945,7 +969,7 @@ add_para(
 
 add_heading("7.2 Future Work", level=2)
 add_bullet("Exchange Online / Microsoft Graph API integration for NTU and corporate email accounts")
-add_bullet("Persistent user preference modelling: store conversation history and extracted preferences in SQLite or a vector database for truly personalised responses over time")
+add_bullet("Persistent conversation history: persist per-tab history to disk (SQLite or a vector database) so sessions survive browser restarts and enable long-term user preference modelling")
 add_bullet("Gmail write access: send emails, create draft replies, archive/label messages via the AI agent")
 add_bullet("Cloud deployment: containerise with Docker, deploy to AWS/GCP with proper secret management (AWS Secrets Manager, GCP Secret Manager)")
 add_bullet("Multi-tenancy: add user accounts with per-user credential storage and isolated conversation contexts")

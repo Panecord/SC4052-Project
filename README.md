@@ -1,13 +1,25 @@
-# OpenClaw — PA-as-a-Service
+# CloneMe — Personal Assistant-as-a-Service
 
-An agentic app builder powered by Claude. Describe an app, and OpenClaw generates the code, pushes it to a private GitHub repo, serves a live local preview, and posts an announcement to Mastodon.
+Your AI-powered digital clone. CloneMe decomposes personal assistant capabilities into independent microservices (email, calendar, trends, code generation) orchestrated by a Claude AI agent. Describe a task in plain English and CloneMe acts on it across your digital life.
+
+---
+
+## Features
+
+- **AI Chat** — agentic Claude loop with real-time SSE streaming, tool-call cards, per-tab conversation history, and max-tokens continuation
+- **Email** — Gmail (OAuth2), Outlook, and Yahoo Mail (IMAP); search, read, summarise
+- **Calendar** — Google Calendar 7-day view with AI-powered event creation
+- **Trends** — live aggregation from Mastodon, HackerNews, GitHub, Reddit, and YouTube
+- **Vibe-Coding** — describe an app → Claude generates code → private GitHub repo created → local preview served instantly
+- **Build History** — view, preview, and delete all AI-generated repositories
+- **Research Pipeline** — web search + webpage reader to inform builds before code generation
 
 ---
 
 ## Prerequisites
 
 - Python 3.10+
-- API keys for Anthropic, GitHub, and Mastodon (details below)
+- API keys: Anthropic (required), GitHub (for builds), Google OAuth (email + calendar), Mastodon (optional), YouTube (optional)
 
 ---
 
@@ -17,7 +29,7 @@ An agentic app builder powered by Claude. Describe an app, and OpenClaw generate
 
 ```bash
 git clone <your-repo-url>
-cd openclaw
+cd CloneMe
 ```
 
 ### 2. Create a virtual environment and install dependencies
@@ -36,23 +48,30 @@ pip install -r requirements.txt
 
 ### 3. Configure environment variables
 
-Copy the example file and fill in your keys:
+Create a `.env` file in the project root:
 
-```bash
-cp .env.example .env
 ```
-
-Open `.env` and set each value:
+ANTHROPIC_API_KEY=sk-ant-...
+GITHUB_TOKEN=ghp_...
+GITHUB_USERNAME=your_username
+MASTODON_ACCESS_TOKEN=...
+MASTODON_API_BASE_URL=https://mastodon.social
+YOUTUBE_API_KEY=...
+GOOGLE_CLIENT_ID=...
+GOOGLE_CLIENT_SECRET=...
+FLASK_SECRET_KEY=your-secret-key
+```
 
 | Variable | Where to get it |
 |---|---|
 | `ANTHROPIC_API_KEY` | [console.anthropic.com](https://console.anthropic.com/) |
 | `GITHUB_TOKEN` | [github.com/settings/tokens](https://github.com/settings/tokens) — scopes: `repo` |
 | `GITHUB_USERNAME` | Your GitHub username |
-| `MASTODON_ACCESS_TOKEN` | `https://<your-instance>/settings/applications` — scopes: `write:statuses`, `read:statuses` |
-| `MASTODON_API_BASE_URL` | Your Mastodon instance URL, e.g. `https://mastodon.social` |
+| `GOOGLE_CLIENT_ID/SECRET` | [console.cloud.google.com](https://console.cloud.google.com/) — OAuth2 credentials |
+| `MASTODON_ACCESS_TOKEN` | `https://<your-instance>/settings/applications` |
+| `YOUTUBE_API_KEY` | [console.developers.google.com](https://console.developers.google.com/) |
 
-> Mastodon is optional. The app builds and deploys without it if the token is left blank.
+> All keys except `ANTHROPIC_API_KEY` are optional — the app runs without them (those features just won't be available).
 
 ---
 
@@ -60,46 +79,57 @@ Open `.env` and set each value:
 
 ```bash
 python app.py
+# or double-click start.bat on Windows
 ```
 
-Then open your browser at:
+Then open:
 
 ```
 http://localhost:5000
 ```
 
-The Flask server serves the frontend automatically — no separate frontend build step needed.
-
 ---
 
 ## How it works
 
-1. **Describe your app** in the chat input (or pick an idea from the left sidebar).
-2. **Blueprint phase** — Claude Haiku analyses your request and shows a plan (features, tech stack, complexity). Confirm to proceed.
-3. **Build phase** — Claude Sonnet generates all source files, creates a private GitHub repo, pushes the code, and saves a local preview.
-4. **Results** — live preview URL, GitHub repo link, and full source appear in the Output panel on the right.
+1. **Chat** — type any request. CloneMe routes it to the right service automatically.
+2. **Blueprint phase** (for build requests) — Claude Haiku analyses your request and shows a plan. Confirm to build.
+3. **Build phase** — Claude generates all source files, creates a private GitHub repo, pushes the code, and saves a local preview.
+4. **Results** — live preview URL, GitHub repo link, and full source appear in the Output panel.
+5. **Follow-ups** — each tab keeps conversation history, so "make it better" or "add dark mode" works in context.
+
+If a response hits the token limit, a **Continue →** button appears to resume seamlessly.
 
 ---
 
 ## Project structure
 
 ```
-openclaw/
-├── app.py              # Flask backend + Claude agentic loop
+CloneMe/
+├── app.py              # Flask backend + Claude agentic loop (~2,500 lines)
+├── generate_report.py  # Generates the final report DOCX
 ├── requirements.txt
-├── .env.example
+├── start.bat           # Windows launcher
+├── builds.json         # Build history registry
 ├── frontend/
 │   ├── index.html
 │   ├── style.css
+│   ├── state.js
+│   ├── utils.js
+│   ├── chat.js         # SSE consumer, tool cards, history, continue flow
+│   ├── email.js
+│   ├── calendar.js
+│   ├── trends.js
+│   ├── tasks.js
 │   └── app.js
-└── previews/           # Auto-created — stores built apps for local preview
+└── previews/           # Auto-created — locally served AI-generated apps
 ```
 
 ---
 
 ## Troubleshooting
 
-**Red health dot in the header** — the corresponding API key is missing or invalid. Check your `.env` file and restart the server.
+**Red health dot in the header** — the API key for that service is missing or invalid. Check your `.env` file and restart the server.
 
 **Port already in use** — run on a different port:
 ```bash
@@ -107,3 +137,5 @@ flask run --port 5001
 ```
 
 **`ModuleNotFoundError`** — make sure your virtual environment is activated before running.
+
+**Exchange Online / NTU email not working** — Microsoft has disabled Basic Auth for Exchange Online. Outlook personal accounts work; school/corporate accounts require OAuth2 Modern Auth (not yet implemented).
