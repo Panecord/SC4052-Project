@@ -11,7 +11,7 @@ Your AI-powered digital clone. CloneMe decomposes personal assistant capabilitie
 - **Calendar** — Google Calendar 7-day view with AI-powered event creation
 - **Trends** — live aggregation from Mastodon, HackerNews, GitHub, Reddit, and YouTube
 - **Vibe-Coding** — describe an app → Claude generates code → private GitHub repo created → local preview served instantly
-- **Build History** — view, preview, and delete all AI-generated repositories
+- **Build History** — SQLite-backed project registry; view, preview, and delete all AI-generated repositories with their original prompts
 - **Research Pipeline** — web search + webpage reader to inform builds before code generation
 
 ---
@@ -48,18 +48,10 @@ pip install -r requirements.txt
 
 ### 3. Configure environment variables
 
-Create a `.env` file in the project root:
+Copy the example file and fill in your keys:
 
-```
-ANTHROPIC_API_KEY=sk-ant-...
-GITHUB_TOKEN=ghp_...
-GITHUB_USERNAME=your_username
-MASTODON_ACCESS_TOKEN=...
-MASTODON_API_BASE_URL=https://mastodon.social
-YOUTUBE_API_KEY=...
-GOOGLE_CLIENT_ID=...
-GOOGLE_CLIENT_SECRET=...
-FLASK_SECRET_KEY=your-secret-key
+```bash
+cp .env.example .env
 ```
 
 | Variable | Where to get it |
@@ -67,11 +59,14 @@ FLASK_SECRET_KEY=your-secret-key
 | `ANTHROPIC_API_KEY` | [console.anthropic.com](https://console.anthropic.com/) |
 | `GITHUB_TOKEN` | [github.com/settings/tokens](https://github.com/settings/tokens) — scopes: `repo` |
 | `GITHUB_USERNAME` | Your GitHub username |
-| `GOOGLE_CLIENT_ID/SECRET` | [console.cloud.google.com](https://console.cloud.google.com/) — OAuth2 credentials |
-| `MASTODON_ACCESS_TOKEN` | `https://<your-instance>/settings/applications` |
-| `YOUTUBE_API_KEY` | [console.developers.google.com](https://console.developers.google.com/) |
+| `GOOGLE_CLIENT_ID/SECRET` | [console.cloud.google.com](https://console.cloud.google.com/) — enable Gmail + Calendar APIs, create OAuth2 Web credentials, add `http://localhost:5000/api/google/callback` as a redirect URI |
+| `MASTODON_ACCESS_TOKEN` | `https://<your-instance>/settings/applications` — scopes: `read:statuses write:statuses` |
+| `YOUTUBE_API_KEY` | [console.cloud.google.com](https://console.cloud.google.com/) — enable YouTube Data API v3 |
+| `FLASK_SECRET_KEY` | Any random string — generate with `python -c "import secrets; print(secrets.token_hex(32))"` |
 
 > All keys except `ANTHROPIC_API_KEY` are optional — the app runs without them (those features just won't be available).
+
+> **Never commit your `.env` file.** It is already listed in `.gitignore`.
 
 ---
 
@@ -106,11 +101,11 @@ If a response hits the token limit, a **Continue →** button appears to resume 
 
 ```
 CloneMe/
-├── app.py              # Flask backend + Claude agentic loop (~2,500 lines)
-├── generate_report.py  # Generates the final report DOCX
+├── app.py              # Flask backend + Claude agentic loop
 ├── requirements.txt
-├── start.bat           # Windows launcher
-├── builds.json         # Build history registry
+├── .env.example        # Copy to .env and fill in your keys
+├── .gitignore
+├── cloneme.db          # SQLite project registry (auto-created on first run)
 ├── frontend/
 │   ├── index.html
 │   ├── style.css
