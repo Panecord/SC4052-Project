@@ -583,7 +583,8 @@ function handleSSE(raw) {
 }
 
 // ── Build-complete milestone trigger ──────────────────────────────────────────
-// Scan the last AI message for BUILD_COMPLETE: metadata emitted by the system prompt
+// Scan the last AI message for BUILD_COMPLETE: metadata emitted by the system prompt.
+// Instead of auto-opening a modal (which blocks the input), inject a clickable card.
 function _checkBuildComplete() {
   const tab = currentTab();
   if (!tab.state.repoUrl) return;   // not a build session
@@ -593,11 +594,31 @@ function _checkBuildComplete() {
   const repoName  = match[1].trim();
   const title     = match[2].trim();
   const features  = match[3].split(',').map(f => f.trim()).filter(Boolean);
-  // Hide the BUILD_COMPLETE line from the chat — it's machine metadata
-  tab.feedEl.querySelectorAll('.msg-text').forEach(el => {
-    el.innerHTML = el.innerHTML.replace(/BUILD_COMPLETE:[^\n<]*/gi, '');
+  const repoUrl   = tab.state.repoUrl;
+
+  // Remove BUILD_COMPLETE metadata line from every rendered message element
+  tab.feedEl.querySelectorAll('.msg-text, p').forEach(el => {
+    if (el.innerText && el.innerText.includes('BUILD_COMPLETE')) {
+      el.innerHTML = el.innerHTML.replace(/BUILD_COMPLETE:[^\n<]*/gi, '').trim();
+      if (!el.innerHTML.trim()) el.remove();
+    }
   });
-  openMilestoneModal({ repoName, title, features, repoUrl: tab.state.repoUrl });
+
+  // Show a non-blocking inline card instead of a modal
+  if (tab.feedEl.querySelector('.build-complete-card')) return; // don't add twice
+  const card = document.createElement('div');
+  card.className = 'build-complete-card';
+  card.innerHTML = `
+    <div class="bcc-icon">🚀</div>
+    <div class="bcc-body">
+      <div class="bcc-title">${esc(title)} — built!</div>
+      <div class="bcc-sub">Set milestones &amp; schedule feature deadlines on your calendar.</div>
+    </div>
+    <button class="bcc-btn" onclick="openMilestoneModal({repoName:'${esc(repoName)}',title:'${esc(title)}',features:${JSON.stringify(features)},repoUrl:'${esc(repoUrl)}'});this.closest('.build-complete-card').remove()">
+      Set milestones →
+    </button>`;
+  tab.feedEl.appendChild(card);
+  scrollFeedDown();
 }
 
 // ── Blueprint (intent card) ───────────────────────────────────────────────────
@@ -823,6 +844,9 @@ async function runAgent(prompt, intent) {
     _agentAbort = null;
     clearWatchdog();
     setIdle();
+    // Safety net: re-enable input after a short delay in case any synchronous
+    // code running after this finally block re-locks it unexpectedly.
+    setTimeout(setIdle, 200);
   }
 }
 

@@ -21,6 +21,7 @@ import re
 import time
 import base64
 import threading
+import sqlite3
 import imaplib
 import email as email_lib
 from email.header import decode_header as _decode_header
@@ -100,6 +101,7 @@ PREVIEWS_DIR = BASE_DIR / "previews"
 TOKENS_FILE  = BASE_DIR / "google_tokens.json"
 IMAP_FILE    = BASE_DIR / "imap_accounts.json"
 BUILDS_FILE  = BASE_DIR / "builds.json"
+DB_FILE      = BASE_DIR / "cloneme.db"
 PREVIEWS_DIR.mkdir(exist_ok=True)
 
 IMAP_SERVERS = {
@@ -231,6 +233,7 @@ TOOLS = [
                     },
                 },
                 "commit_message": {"type": "string", "default": "feat: initial commit"},
+                "prompt": {"type": "string", "description": "The original user request that triggered this build, for project history"},
             },
             "required": ["repo_name", "files"],
         },
@@ -372,31 +375,103 @@ def _gh(method: str, path: str, **kw) -> req_lib.Response:
         timeout=20, **kw,
     )
 
-# ── Build registry helpers ────────────────────────────────────────────────────
-def _load_builds() -> list:
-    if BUILDS_FILE.exists():
-        try:
-            return json.loads(BUILDS_FILE.read_text(encoding="utf-8"))
-        except Exception:
-            return []
-    return []
+# ── SQLite build registry ─────────────────────────────────────────────────────
+def _db() -> sqlite3.Connection:
+    conn = sqlite3.connect(str(DB_FILE))
+    conn.row_factory = sqlite3.Row
+    return conn
 
-def _save_builds(builds: list):
-    BUILDS_FILE.write_text(json.dumps(builds, indent=2), encoding="utf-8")
+def _init_db():
+    with _db() as conn:
+        conn.execute("""
+            CREATE TABLE IF NOT EXISTS projects (
+                repo_name   TEXT PRIMARY KEY,
+                description TEXT DEFAULT '',
+                repo_url    TEXT DEFAULT '',
+                full_name   TEXT DEFAULT '',
+                created_at  TEXT DEFAULT '',
+                pushed_at   TEXT DEFAULT '',
+                status      TEXT DEFAULT 'creating',
+                files_count INTEGER DEFAULT 0,
+                preview_url TEXT DEFAULT '',
+                prompt      TEXT DEFAULT '',
+                legacy      INTEGER DEFAULT 0
+            )
+        """)
+        conn.commit()
+    _migrate_builds_json()
+
+def _migrate_builds_json():
+    """One-time migration: import builds.json into SQLite if the table is empty."""
+    if not BUILDS_FILE.exists():
+        return
+    try:
+        rows = json.loads(BUILDS_FILE.read_text(encoding="utf-8"))
+        if not rows:
+            return
+        with _db() as conn:
+            existing = {r[0] for r in conn.execute("SELECT repo_name FROM projects").fetchall()}
+            for b in rows:
+                rn = b.get("repo_name")
+                if not rn or rn in existing:
+                    continue
+                conn.execute("""
+                    INSERT OR IGNORE INTO projects
+                        (repo_name, description, repo_url, full_name, created_at,
+                         pushed_at, status, files_count, preview_url, prompt, legacy)
+                    VALUES (?,?,?,?,?,?,?,?,?,?,?)
+                """, (
+                    rn,
+                    b.get("description", ""),
+                    b.get("repo_url", ""),
+                    b.get("full_name", ""),
+                    b.get("created_at", ""),
+                    b.get("pushed_at", ""),
+                    b.get("status", "ready"),
+                    b.get("files_count", 0),
+                    b.get("preview_url", ""),
+                    b.get("prompt", ""),
+                    1 if b.get("legacy") else 0,
+                ))
+            conn.commit()
+        log.info("DB  migrated %d builds from builds.json", len(rows))
+    except Exception as ex:
+        log.warning("DB  builds.json migration failed: %s", ex)
+
+def _load_builds() -> list:
+    with _db() as conn:
+        rows = conn.execute(
+            "SELECT * FROM projects ORDER BY created_at DESC"
+        ).fetchall()
+        return [dict(r) for r in rows]
 
 def _upsert_build(repo_name: str, patch: dict, defaults: dict = None):
-    """Update an existing build record or insert a new one.
+    """Update an existing project row or insert a new one.
     `patch` always overwrites. `defaults` only apply when creating a new record."""
-    builds = _load_builds()
-    for b in builds:
-        if b.get("repo_name") == repo_name:
-            b.update(patch)
-            _save_builds(builds)
-            return
-    new_entry = {"repo_name": repo_name, **(defaults or {})}
-    new_entry.update(patch)
-    builds.insert(0, new_entry)
-    _save_builds(builds)
+    with _db() as conn:
+        exists = conn.execute(
+            "SELECT 1 FROM projects WHERE repo_name=?", (repo_name,)
+        ).fetchone()
+        if exists:
+            if patch:
+                cols = ", ".join(f"{k}=?" for k in patch)
+                conn.execute(
+                    f"UPDATE projects SET {cols} WHERE repo_name=?",
+                    [*patch.values(), repo_name],
+                )
+        else:
+            data = {"repo_name": repo_name, **(defaults or {})}
+            data.update(patch)
+            cols = ", ".join(data.keys())
+            placeholders = ", ".join("?" * len(data))
+            conn.execute(
+                f"INSERT INTO projects ({cols}) VALUES ({placeholders})",
+                list(data.values()),
+            )
+        conn.commit()
+
+_init_db()
+log.info("DB  SQLite ready at %s", DB_FILE)
 
 # ── GitHub tool functions ─────────────────────────────────────────────────────
 def _tool_create_github_repo(name: str, description: str) -> dict:
@@ -424,7 +499,8 @@ def _tool_create_github_repo(name: str, description: str) -> dict:
     return {"success": False, "error": f"Could not find an available name for '{name}'"}
 
 def _tool_push_files_to_repo(
-    repo_name: str, files: list, commit_message: str = "feat: initial commit"
+    repo_name: str, files: list, commit_message: str = "feat: initial commit",
+    prompt: str = ""
 ) -> dict:
     results = []
     for f in files:
@@ -453,16 +529,18 @@ def _tool_push_files_to_repo(
         dest.parent.mkdir(parents=True, exist_ok=True)
         dest.write_text(f["content"], encoding="utf-8")
     ok = sum(1 for r in results if r["success"])
-    # Update build registry
+    patch = {
+        "repo_url":    f"https://github.com/{GITHUB_USERNAME}/{repo_name}",
+        "status":      "ready" if ok > 0 else "error",
+        "files_count": ok,
+        "pushed_at":   datetime.now(timezone.utc).isoformat(),
+        "preview_url": f"/preview/{repo_name}/",
+    }
+    if prompt:
+        patch["prompt"] = prompt[:2000]
     _upsert_build(
         repo_name,
-        patch={
-            "repo_url":    f"https://github.com/{GITHUB_USERNAME}/{repo_name}",
-            "status":      "ready" if ok > 0 else "error",
-            "files_count": ok,
-            "pushed_at":   datetime.now(timezone.utc).isoformat(),
-            "preview_url": f"/preview/{repo_name}/",
-        },
+        patch=patch,
         defaults={
             "description": "",
             "full_name":   f"{GITHUB_USERNAME}/{repo_name}",
@@ -2176,7 +2254,7 @@ def health():
 def preview(filename):
     parts = filename.split("/", 1)
     repo  = parts[0]
-    rest  = parts[1] if len(parts) > 1 else "index.html"
+    rest  = (parts[1] if len(parts) > 1 else "") or "index.html"
     return send_from_directory(PREVIEWS_DIR / repo, rest)
 
 @app.route("/api/previews")
@@ -2189,29 +2267,52 @@ def list_previews():
 def list_builds():
     builds = _load_builds()
     tracked = {b["repo_name"] for b in builds}
-    # Surface any legacy preview folders not yet in the registry
+    # Surface any legacy preview folders not yet in the SQLite registry
     if PREVIEWS_DIR.exists():
         for d in sorted(PREVIEWS_DIR.iterdir(), key=lambda p: -p.stat().st_ctime):
             if d.is_dir() and d.name not in tracked:
-                builds.append({
+                entry = {
                     "repo_name":   d.name,
                     "description": "",
                     "repo_url":    f"https://github.com/{GITHUB_USERNAME}/{d.name}" if GITHUB_USERNAME else "",
                     "full_name":   f"{GITHUB_USERNAME}/{d.name}" if GITHUB_USERNAME else d.name,
                     "created_at":  datetime.fromtimestamp(d.stat().st_ctime, tz=timezone.utc).isoformat(),
+                    "pushed_at":   "",
                     "status":      "ready",
                     "files_count": sum(1 for _ in d.rglob("*") if _.is_file()),
                     "preview_url": f"/preview/{d.name}/",
-                    "legacy":      True,
-                })
+                    "prompt":      "",
+                    "legacy":      1,
+                }
+                # Persist newly discovered legacy folders into DB
+                _upsert_build(d.name, patch={}, defaults=entry)
+                builds.append(entry)
     for b in builds:
         b["has_preview"] = (PREVIEWS_DIR / b["repo_name"]).is_dir()
     return jsonify(builds)
 
+@app.route("/api/builds/<repo_name>", methods=["GET"])
+def get_build(repo_name):
+    if not re.match(r'^[a-zA-Z0-9_\-\.]+$', repo_name):
+        return jsonify({"success": False, "error": "Invalid repo name"}), 400
+    with _db() as conn:
+        row = conn.execute(
+            "SELECT * FROM projects WHERE repo_name=?", (repo_name,)
+        ).fetchone()
+    if not row:
+        return jsonify({"success": False, "error": "Not found"}), 404
+    data = dict(row)
+    data["has_preview"] = (PREVIEWS_DIR / repo_name).is_dir()
+    if data["has_preview"]:
+        data["files"] = [
+            str(p.relative_to(PREVIEWS_DIR / repo_name))
+            for p in (PREVIEWS_DIR / repo_name).rglob("*") if p.is_file()
+        ]
+    return jsonify({"success": True, "build": data})
+
 @app.route("/api/builds/<repo_name>", methods=["DELETE"])
 def delete_build(repo_name):
     import shutil
-    # Validate name (prevent path traversal)
     if not re.match(r'^[a-zA-Z0-9_\-\.]+$', repo_name):
         return jsonify({"success": False, "error": "Invalid repo name"}), 400
 
@@ -2230,9 +2331,9 @@ def delete_build(repo_name):
     if preview_dir.exists():
         shutil.rmtree(preview_dir)
 
-    builds = _load_builds()
-    builds = [b for b in builds if b.get("repo_name") != repo_name]
-    _save_builds(builds)
+    with _db() as conn:
+        conn.execute("DELETE FROM projects WHERE repo_name=?", (repo_name,))
+        conn.commit()
 
     return jsonify({"success": True, "github_deleted": github_deleted, "github_error": github_error})
 

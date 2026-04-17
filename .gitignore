@@ -4,6 +4,10 @@ __pycache__/
 *.pyc
 .venv/
 *.log
+.vscode/
 google_tokens.json
+imap_accounts.json
+cloneme.db
+previews/
 generate_report.py
 CloneMe_Final_Report_v2.docx

@@ -508,29 +508,6 @@
       </div>
     </section>
 
-    <!-- ════════════════════════════════════════════════════════════════════
-         FLOATING TASKS WIDGET — visible from every section
-    ═════════════════════════════════════════════════════════════════════ -->
-    <div class="tasks-float" id="tasks-float">
-      <div class="tasks-float-panel" id="tasks-float-panel">
-        <div class="tasks-float-header">
-          <span>Background Tasks</span>
-          <button class="icon-btn" onclick="toggleTasksFloat()">✕</button>
-        </div>
-        <div class="tasks-float-body" id="tasks-float-body">
-          <div class="tasks-float-empty">No tasks yet — try asking CloneMe to do something!</div>
-        </div>
-      </div>
-      <button class="tasks-float-btn" id="tasks-float-btn" onclick="toggleTasksFloat()" title="Background tasks">
-        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <circle cx="12" cy="12" r="3"/>
-          <path d="M19.07 4.93a10 10 0 0 1 0 14.14M4.93 4.93a10 10 0 0 0 0 14.14"/>
-        </svg>
-        <span id="tasks-float-label">No tasks yet</span>
-        <span class="tasks-float-badge" id="tasks-float-badge" style="display:none">0</span>
-      </button>
-    </div>
-
   </main><!-- /main -->
 </div><!-- /shell -->
 
@@ -645,5 +622,28 @@
 <script src="trends.js"></script>
 <script src="tasks.js"></script>
 <script src="app.js"></script>
+
+<!-- ════════════════════════════════════════════════════════════════════
+     FLOATING TASKS WIDGET — anchored to viewport bottom-right
+═════════════════════════════════════════════════════════════════════ -->
+<div class="tasks-float" id="tasks-float">
+  <div class="tasks-float-panel" id="tasks-float-panel">
+    <div class="tasks-float-header">
+      <span>Background Tasks</span>
+      <button class="icon-btn" onclick="toggleTasksFloat()">✕</button>
+    </div>
+    <div class="tasks-float-body" id="tasks-float-body">
+      <div class="tasks-float-empty">No tasks yet — try asking CloneMe to do something!</div>
+    </div>
+  </div>
+  <button class="tasks-float-btn" id="tasks-float-btn" onclick="toggleTasksFloat()" title="Background tasks">
+    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <circle cx="12" cy="12" r="3"/>
+      <path d="M19.07 4.93a10 10 0 0 1 0 14.14M4.93 4.93a10 10 0 0 0 0 14.14"/>
+    </svg>
+    <span id="tasks-float-label">No tasks yet</span>
+    <span class="tasks-float-badge" id="tasks-float-badge" style="display:none">0</span>
+  </button>
+</div>
 </body>
 </html>
